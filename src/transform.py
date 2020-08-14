@@ -35,10 +35,10 @@ def cs4243_resize(image, new_width, new_height):
     :param new_height: int
     :return: new_image: numpy.ndarray
     """
-    imageLen2=False
+    image_len_two=False
     new_image = np.zeros((new_height, new_width, 3), dtype='uint8')
     if len(image.shape)==2:
-        imageLen2=True
+        image_len_two=True
         new_image = np.zeros((new_height, new_width), dtype='uint8')
         
     ###Your code here####
@@ -50,12 +50,12 @@ def cs4243_resize(image, new_width, new_height):
     
     for x in range(0, new_height):  
         for y in range(0, new_width):
-            srcX=int(x*height_ratio)
-            srcY=int(y*width_ratio)
-            if(imageLen2):
-                new_image[x][y]= image[srcX][srcY]
+            src_x=int(x*height_ratio)
+            src_y=int(y*width_ratio)
+            if(image_len_two):
+                new_image[x][y]= image[src_x][src_y]
             else: 
-                new_image[x][y]= image[srcX][srcY][0:3]
+                new_image[x][y]= image[src_x][src_y][0:3]
     ###
     return new_image
 
