@@ -98,9 +98,13 @@ def cs4243_histnorm(image, grey_level=256):
     Tips: use linear normalization here https://en.wikipedia.org/wiki/Normalization_(image_processing)
     """
     res_image = image.copy()
+
     ##your code here ###
-    
+    low = image.min()
+    high = image.max()
+    res_image = ((res_image - low) / (high - low) * grey_level)
     ####
+    
     return res_image
 
 
@@ -348,4 +352,4 @@ def cs4243_Lap_blend(A, B, mask):
     
     ##
     
-    return blended image
+    return blended_image
