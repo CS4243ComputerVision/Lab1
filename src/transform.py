@@ -122,7 +122,16 @@ def cs4243_histequ(image, grey_level=256):
     Tips: use numpy buildin funcs to ease your work on image statistics
     """
     ###your code here####
-    
+    ori_hist = np.bincount(image.flatten(), minlength=grey_level)
+    cum_hist = np.zeros(len(ori_hist), dtype='float64')
+    cumulated_value = 0
+    image_size = image.shape[0] * image.shape[1]
+    for i in range(len(cum_hist)):  
+        cumulated_value = cumulated_value + ori_hist[i]      
+        cum_hist[i] = cumulated_value / image_size 
+    uniform_hist = np.zeros(len(ori_hist), dtype='float64')
+    for j in range(len(uniform_hist)):
+        uniform_hist[j] = math.floor(cum_hist[j] * (grey_level - 1))
     ###
 
     # Set the intensity of the pixel in the raw image to its corresponding new intensity 
