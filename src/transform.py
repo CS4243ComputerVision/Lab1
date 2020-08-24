@@ -181,9 +181,9 @@ def cs4243_histmatch(ori_image, refer_image):
     ref_cumulated_value=0
     refer_image_size=refer_image.shape[0]*refer_image.shape[1]
     
+    print(refer_hist[255])
+    
     for i in range(len(refer_cum_hist)):
-        if(refer_hist[i] == 255):
-            print("Refer 255")
         ref_cumulated_value=ref_cumulated_value+refer_hist[i]
         refer_cum_hist[i]=ref_cumulated_value/refer_image_size
     # (refer_cum_hist)
@@ -291,9 +291,25 @@ def cs4243_filter(image, kernel):
     Hi, Wi = image.shape
     Hk, Wk = kernel.shape
     filtered_image = np.zeros((Hi, Wi))
-
+    
     ###Your code here####
-    for (
+    
+    # Pad the image with 0s 
+    height_padding_length = int(Hk / 2)
+    width_padding_length = int(Wk / 2)
+    padded_image = pad_zeros(image, height_padding_length, width_padding_length)
+    
+    # Traverse through every pixel in the padded_image
+    for i in range(0 + height_padding_length, Hi + height_padding_length):  
+        for j in range(0 + width_padding_length, Wi + width_padding_length):
+            temp = 0 
+            for u in range(-height_padding_length, height_padding_length + 1):
+                for v in range(-width_padding_length, width_padding_length + 1):
+                    # Convolution formula is Pi-u, j-v
+                    temp += padded_image[i - u][j - v] * kernel[u + height_padding_length][v + width_padding_length]
+            # Remember that the dimensions of filtered_image is smaller than padded_image hence need to 
+            # adjust index to account for padded 0s positions in padded_image
+            filtered_image[i - height_padding_length][j- width_padding_length] = temp
     ###
 
     return filtered_image
@@ -331,7 +347,7 @@ def cs4243_filter_fast(image, kernel):
     filtered_image = np.zeros((Hi, Wi))
 
     ###Your code here####
-    
+
     ###
 
     return filtered_image
