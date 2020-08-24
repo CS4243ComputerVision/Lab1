@@ -145,6 +145,7 @@ def cs4243_histequ(image, grey_level=256):
     uni_hist = np.bincount(res_image.flatten(), minlength=grey_level)
     return ori_hist, cum_hist, res_image, uni_hist
 
+## hist_match function not passing test ##
 def cs4243_histmatch(ori_image, refer_image):
     """
     10 points
@@ -221,33 +222,6 @@ def cs4243_histmatch(ori_image, refer_image):
     ref_hist = np.bincount(refer_image.flatten(), minlength=256)
     
     return ori_hist, ref_hist, res_image, res_hist
-
-# def cs4243_histmatch(ori_image, refer_image):
-#     """
-#     10 points
-#     Make ori_image have the similar intensity distribution as refer_image
-#     :param ori_image #image to be processed
-#     :param refer_image #image of target gray histogram 
-#     :return: ori_hist: histogram of original image
-#     :return: ref_hist: histogram of reference image
-#     :return: res_image: image after being applied histogram normalization.
-#     :return: res_hist: histogram of the enhanced image.
-#     Tips: use cs4243_histequ to help you
-#     """
-    
-#     ##your code here ###
-    
-#     ##
-#     # Set the intensity of the pixel in the raw image to its corresponding new intensity      
-#     height, width = ori_image.shape
-#     res_image = np.zeros(ori_image.shape, dtype='uint8')  # Note the type of elements
-#     for i in range(height):
-#         for j in range(width):
-#             res_image[i,j] = map_value[ori_image[i,j]]
-    
-#     res_hist = np.bincount(res_image.flatten(), minlength=256)
-    
-#     return ori_hist, ref_hist, res_image, res_hist
 
 def cs4243_rotate180(kernel):
     """
