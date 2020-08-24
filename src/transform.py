@@ -36,24 +36,24 @@ def cs4243_resize(image, new_width, new_height):
     :param new_height: int
     :return: new_image: numpy.ndarray
     """
-    image_len_two=False
-    new_image = np.zeros((new_height, new_width, 3), dtype='uint8')
-    if len(image.shape)==2:
-        image_len_two=True
-        new_image = np.zeros((new_height, new_width), dtype='uint8')
+    image_len_two = False
+    new_image = np.zeros((new_height, new_width, 3), dtype = 'uint8')
+    if len(image.shape) == 2:
+        image_len_two = True
+        new_image = np.zeros((new_height, new_width), dtype = 'uint8')
         
     ###Your code here####
     old_height = image.shape[0]
     old_width = image.shape[1]
 
-    width_ratio = old_width/new_width
-    height_ratio = old_height/new_height
+    width_ratio = old_width / new_width
+    height_ratio = old_height / new_height
     
     for x in range(0, new_height):  
         for y in range(0, new_width):
-            src_x=int(x*height_ratio)
-            src_y=int(y*width_ratio)
-            if(image_len_two):
+            src_x = int(x * height_ratio)
+            src_y = int(y * width_ratio)
+            if (image_len_two):
                 new_image[x][y]= image[src_x][src_y]
             else: 
                 new_image[x][y]= image[src_x][src_y][0:3]
@@ -293,7 +293,7 @@ def cs4243_filter(image, kernel):
     filtered_image = np.zeros((Hi, Wi))
 
     ###Your code here####
-
+    for (
     ###
 
     return filtered_image
