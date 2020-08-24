@@ -1,6 +1,7 @@
 import numpy as np
 from skimage import io
 import os.path as osp
+import math
 
 def load_image(file_name):
     """
@@ -102,7 +103,7 @@ def cs4243_histnorm(image, grey_level=256):
     ##your code here ###
     low = image.min()
     high = image.max()
-    res_image = ((res_image - low) / (high - low) * grey_level)
+    res_image = ((res_image - low) / (high - low) * (grey_level-1))
     ####
     
     return res_image
@@ -143,34 +144,110 @@ def cs4243_histequ(image, grey_level=256):
     
     uni_hist = np.bincount(res_image.flatten(), minlength=grey_level)
     return ori_hist, cum_hist, res_image, uni_hist
- 
+
 def cs4243_histmatch(ori_image, refer_image):
     """
     10 points
-    Make ori_image have the similar intensity distribution as refer_image
+    Map value according to the difference between cumulative histogram.
+    Note that the cum_hists of the two images can be very different. It is possible
+    that a given value cum_hist[i] != cum_hist[j] for all j in [0,255]. In this case, please
+    map to the closest value instead. if there are multiple intensities meet the requirement,
+    choose the smallest one.
     :param ori_image #image to be processed
     :param refer_image #image of target gray histogram 
     :return: ori_hist: histogram of original image
     :return: ref_hist: histogram of reference image
-    :return: res_image: image after being applied histogram normalization.
+    :return: res_image: image after being applied histogram matching.
     :return: res_hist: histogram of the enhanced image.
     Tips: use cs4243_histequ to help you
     """
+    ###your code here####
+    # (1) Form histogram of original image
+    ori_hist = np.bincount(ori_image.flatten(), minlength=256)
+    cum_hist = np.zeros(len(ori_hist), dtype='float64')
+    cumulated_value=0
+    image_size=ori_image.shape[0]*ori_image.shape[1]
     
-    ##your code here ###
+    for i in range(len(cum_hist)):
+        cumulated_value=cumulated_value+ori_hist[i]
+        cum_hist[i]=cumulated_value/image_size
+    # (cum_hist)
+    # Index -> intensity
+    # Value -> Cumulative freq
     
-    ##
+    # (2) Form histogram of template image
+    refer_hist = np.bincount(refer_image.flatten(), minlength=256)
+    refer_cum_hist = np.zeros(len(refer_hist), dtype='float64')
+    ref_cumulated_value=0
+    refer_image_size=refer_image.shape[0]*refer_image.shape[1]
+    
+    for i in range(len(refer_cum_hist)):
+        if(refer_hist[i] == 255):
+            print("Refer 255")
+        ref_cumulated_value=ref_cumulated_value+refer_hist[i]
+        refer_cum_hist[i]=ref_cumulated_value/refer_image_size
+    # (refer_cum_hist)
+    # Index -> intensity
+    # Value -> Cumulative freq
+    
+    # (3) 
+    match_hist=np.zeros(len(cum_hist), dtype='float64')
+    for intensity, frequency in enumerate(cum_hist):
+        # note that index of refer_cum_hist=intensity val
+        # we want to find the intensity/index that has the closest matching cum freq with 
+        # cum_hist
+        # https://numpy.org/doc/stable/reference/generated/numpy.argmin.html
+        # In case of multiple occurrences of the minimum values, the indices corresponding to the first occurrence are returned.
+        new_intensity = (np.abs(refer_cum_hist - frequency)).argmin()
+        match_hist[intensity]=new_intensity
+    # (match_hist)
+    # index -> Old intensity
+    # value -> New intensity
+    
+    ####
+    
     # Set the intensity of the pixel in the raw image to its corresponding new intensity      
     height, width = ori_image.shape
     res_image = np.zeros(ori_image.shape, dtype='uint8')  # Note the type of elements
+    
     for i in range(height):
         for j in range(width):
-            res_image[i,j] = map_value[ori_image[i,j]]
+            # ori_image[i,j] contains the Old intensity value
+            res_image[i,j] = match_hist[ori_image[i,j]]
+
     
     res_hist = np.bincount(res_image.flatten(), minlength=256)
+    ori_hist = np.bincount(ori_image.flatten(), minlength=256)
+    ref_hist = np.bincount(refer_image.flatten(), minlength=256)
     
     return ori_hist, ref_hist, res_image, res_hist
 
+# def cs4243_histmatch(ori_image, refer_image):
+#     """
+#     10 points
+#     Make ori_image have the similar intensity distribution as refer_image
+#     :param ori_image #image to be processed
+#     :param refer_image #image of target gray histogram 
+#     :return: ori_hist: histogram of original image
+#     :return: ref_hist: histogram of reference image
+#     :return: res_image: image after being applied histogram normalization.
+#     :return: res_hist: histogram of the enhanced image.
+#     Tips: use cs4243_histequ to help you
+#     """
+    
+#     ##your code here ###
+    
+#     ##
+#     # Set the intensity of the pixel in the raw image to its corresponding new intensity      
+#     height, width = ori_image.shape
+#     res_image = np.zeros(ori_image.shape, dtype='uint8')  # Note the type of elements
+#     for i in range(height):
+#         for j in range(width):
+#             res_image[i,j] = map_value[ori_image[i,j]]
+    
+#     res_hist = np.bincount(res_image.flatten(), minlength=256)
+    
+#     return ori_hist, ref_hist, res_image, res_hist
 
 def cs4243_rotate180(kernel):
     """
@@ -190,7 +267,7 @@ def cs4243_gaussian_kernel(ksize, sigma):
     Make Gaussian kernel be central symmentry by moving the 
     origin point of the coordinate system from the top-left
     to the center. Please round down the mean value. In this assignment,
-    we define the center point (cp) of even-size kernel to be same as the nearst
+    we define the center point (cp) of even-size kernel to be the same as that of the nearest
     (larger) odd size kernel, e.g., cp(4) to be same with cp(5).
     :param ksize: int
     :param sigma: float
@@ -265,7 +342,7 @@ def cs4243_filter_faster(image, kernel):
     Implement a faster version of filtering algorithm.
     Pre-extract all the regions of kernel size,
     and obtain a matrix of shape (Hi*Wi, Hk*Wk),also reshape the flipped
-    kernel to be of shape (Hk*Hk, 1), then do matrix multiplication, and rehshape back
+    kernel to be of shape (Hk*Wk, 1), then do matrix multiplication, and rehshape back
     to get the final output image.
     :param image: numpy.ndarray
     :param kernel: numpy.ndarray
@@ -303,7 +380,6 @@ def cs4243_upsample(image, ratio):
     :param kernel: use same kernel to get approximate value for additional pixels
     :param ratio: which means upsample the width to ratio*width, and height to ratio*height
     :return res_image: upsampled image
-    Tips: use cs4243_resize to help you
     """
     width, height = image.shape[1], image.shape[0]
     new_width, new_height = width*ratio, height*ratio
@@ -318,8 +394,10 @@ def cs4243_gauss_pyramid(image, n=4):
     build a Gaussian Pyramid of level n
     :param image: original grey scaled image
     :param n: level of pyramid
-    :return pyramid: list, with list[0] corresponding to blurred image at level 0 
+    :return pyramid: list, with list[0] corresponding to original image.
+	:e.g., img0->blur&downsample->img1->blur&downsample->img2	
     Tips: you may need to call cs4243_gaussian_kernel() and cs4243_filter_faster()
+	The kernel for blur is given, do not change it.
     """
     kernel = cs4243_gaussian_kernel(7, 1)
     pyramid = []
@@ -333,7 +411,8 @@ def cs4243_lap_pyramid(gauss_pyramid):
     10 points
     build a Laplacian Pyramid from the corresponding Gaussian Pyramid
     :param gauss_pyramid: list, results of cs4243_gauss_pyramid
-    :return lap_pyramid: list, with list[0] corresponding to image at level n-1
+    :return lap_pyramid: list, with list[0] corresponding to image at level n-1 in Gaussian Pyramid.
+	Tips: The kernel for blurring during upsampling is given, you need to scale its value following the standard pipeline in laplacian pyramid.
     """
     #use same Gaussian kernel 
 
@@ -350,13 +429,14 @@ def cs4243_Lap_blend(A, B, mask):
     """
     10 points
     blend image with Laplacian pyramid
-    :param A: image on left
-    :param B: image on right
+    :param A: image on the left
+    :param B: image on the right
     :param mask: mask [0, 1]
-    :return blended image: same size as input image
+    :return blended_image: same size as input image
     Tips: use cs4243_gauss_pyramid() & cs4243_lap_pyramid() to help you
     """
     kernel = cs4243_gaussian_kernel(7, 1)
+    blended_image = None
     ## your code here####
     
     ##
