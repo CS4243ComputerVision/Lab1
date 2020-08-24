@@ -69,9 +69,9 @@ def cs4243_rgb2grey(image):
     :param image: numpy.ndarray
     :return: grey_image: numpy.ndarray
     """
-    RED=0.299
-    GREEN=0.587
-    BLUE=0.114
+    RED = 0.299
+    GREEN = 0.587
+    BLUE = 0.114
     
     if len(image.shape) != 3:
         print('Image should have 3 channels')
@@ -84,7 +84,7 @@ def cs4243_rgb2grey(image):
     
     for x in range(0, height):
         for y in range(0, width):
-            new_image[x][y]=((image[x][y][0]*RED)/255+(image[x][y][1]*GREEN)/255+(image[x][y][2]*BLUE)/255)
+            new_image[x][y] = (image[x][y][0]*RED)/255 + (image[x][y][1]*GREEN)/255 + (image[x][y][2]*BLUE)/255
              
     ###
     return new_image
