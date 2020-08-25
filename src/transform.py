@@ -367,7 +367,7 @@ def cs4243_upsample(image, ratio):
     return res_image
 
 
-def cs4243_gauss_pyramid(image, n=4):
+def cs4243_gauss_pyramid(image, n=3):
     """
     10 points
     build a Gaussian Pyramid of level n
