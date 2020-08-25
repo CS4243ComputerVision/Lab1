@@ -12,8 +12,11 @@ def load_image(file_name):
     if not osp.exists(file_name):
         print('{} not exist'.format(file_name))
         return
-    image = io.imread(file_name)
-    return np.array(image)
+    image = np.asarray(io.imread(file_name))
+    if len(image.shape)==3 and image.shape[2]>3:
+        image = image[:, :, :3]
+    # print(image.shape) #should be (x, x, 3)
+    return image
 
 def save_image(image, file_name):
     """
@@ -36,10 +39,9 @@ def cs4243_resize(image, new_width, new_height):
     :param new_height: int
     :return: new_image: numpy.ndarray
     """
-    image_len_two = False
+
     new_image = np.zeros((new_height, new_width, 3), dtype = 'uint8')
     if len(image.shape) == 2:
-        image_len_two = True
         new_image = np.zeros((new_height, new_width), dtype = 'uint8')
         
     ###Your code here####
@@ -51,12 +53,9 @@ def cs4243_resize(image, new_width, new_height):
     
     for x in range(0, new_height):  
         for y in range(0, new_width):
-            src_x = int(x * height_ratio)
-            src_y = int(y * width_ratio)
-            if (image_len_two):
-                new_image[x][y]= image[src_x][src_y]
-            else: 
-                new_image[x][y]= image[src_x][src_y][0:3]
+            src_x = math.floor(x * height_ratio)
+            src_y = math.floor(y * width_ratio)
+            new_image[x][y] = image[src_x][src_y]
     ###
     return new_image
 
@@ -69,9 +68,7 @@ def cs4243_rgb2grey(image):
     :param image: numpy.ndarray
     :return: grey_image: numpy.ndarray
     """
-    RED = 0.299
-    GREEN = 0.587
-    BLUE = 0.114
+    rgb = [0.299, 0.587, 0.114]
     
     if len(image.shape) != 3:
         print('Image should have 3 channels')
@@ -80,14 +77,12 @@ def cs4243_rgb2grey(image):
     ###Your code here####
     height = image.shape[0]
     width = image.shape[1]
-    new_image = np.zeros((height, width))
     
-    for x in range(0, height):
-        for y in range(0, width):
-            new_image[x][y] = (image[x][y][0]*RED)/255 + (image[x][y][1]*GREEN)/255 + (image[x][y][2]*BLUE)/255
-             
+    new_image = np.zeros((height, width))
+    new_image = np.dot(image, rgb) 
     ###
-    return new_image
+    
+    return new_image/255
 
 def cs4243_histnorm(image, grey_level=256):
     """
@@ -107,8 +102,6 @@ def cs4243_histnorm(image, grey_level=256):
     ####
     
     return res_image
-
-
 
 def cs4243_histequ(image, grey_level=256):
     """
@@ -145,7 +138,6 @@ def cs4243_histequ(image, grey_level=256):
     uni_hist = np.bincount(res_image.flatten(), minlength=grey_level)
     return ori_hist, cum_hist, res_image, uni_hist
 
-## hist_match function not passing test ##
 def cs4243_histmatch(ori_image, refer_image):
     """
     10 points
@@ -182,8 +174,6 @@ def cs4243_histmatch(ori_image, refer_image):
     ref_cumulated_value=0
     refer_image_size=refer_image.shape[0]*refer_image.shape[1]
     
-    print(refer_hist[255])
-    
     for i in range(len(refer_cum_hist)):
         ref_cumulated_value=ref_cumulated_value+refer_hist[i]
         refer_cum_hist[i]=ref_cumulated_value/refer_image_size
@@ -215,7 +205,6 @@ def cs4243_histmatch(ori_image, refer_image):
         for j in range(width):
             # ori_image[i,j] contains the Old intensity value
             res_image[i,j] = match_hist[ori_image[i,j]]
-
     
     res_hist = np.bincount(res_image.flatten(), minlength=256)
     ori_hist = np.bincount(ori_image.flatten(), minlength=256)
