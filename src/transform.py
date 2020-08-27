@@ -335,7 +335,23 @@ def cs4243_filter_fast(image, kernel):
     filtered_image = np.zeros((Hi, Wi))
 
     ###Your code here####
+    # Pad the image with 0s 
+    height_padding_length = int(Hk / 2)
+    width_padding_length = int(Wk / 2)
+    padded_image = pad_zeros(image, height_padding_length, width_padding_length)
+    
+    # Rotate kernel by 180
+    rotated_kernel = cs4243_rotate180(kernel)
 
+    # Traverse through every pixel in the padded_image and perform cross-correlation
+    for i in range(0 + height_padding_length, Hi + height_padding_length):
+        for j in range(0 + width_padding_length, Wi + width_padding_length):
+            # We extract a subset matrix of the padded image with the following indices
+            # [start_row_index : end_row_index , start_column_index : end_column_index]
+            padded_image_temp = padded_image[i - height_padding_length: i + height_padding_length + 1, 
+                             j - width_padding_length: j + width_padding_length + 1]
+            # Perform element-wise multiplication, sum up the resultant elements and assign it to filtered_image
+            filtered_image[i - height_padding_length][j - width_padding_length] = np.sum(np.multiply(padded_image_temp, kernel).flatten())
     ###
 
     return filtered_image
@@ -346,8 +362,8 @@ def cs4243_filter_faster(image, kernel):
     10 points
     Implement a faster version of filtering algorithm.
     Pre-extract all the regions of kernel size,
-    and obtain a matrix of shape (Hi*Wi, Hk*Wk),also reshape the flipped
-    kernel to be of shape (Hk*Wk, 1), then do matrix multiplication, and rehshape back
+    and obtain a matrix of shape (Hi*Wi, Hk*Wk), also reshape the flipped
+    kernel to be of shape (Hk*Wk, 1), then do matrix multiplication, and reshape back
     to get the final output image.
     :param image: numpy.ndarray
     :param kernel: numpy.ndarray
@@ -359,7 +375,37 @@ def cs4243_filter_faster(image, kernel):
     filtered_image = np.zeros((Hi, Wi))
 
     ###Your code here####
+    # Pad the image with 0s 
+    height_padding_length = int(Hk / 2)
+    width_padding_length = int(Wk / 2)
+    padded_image = pad_zeros(image, height_padding_length, width_padding_length)
+    
+    # Rotate kernel by 180
+    rotated_kernel = cs4243_rotate180(kernel)
+    
+    # Pre-extract all the regions of kernel size to form a matrix of shape (Hi*Wi, Hk*Wk)
+    # Idea: All the pixels in the image belonging to the window of kernel we are currently 
+    # traversing, is stored as a new row in the matrix (padded_image_new_shape)
+    padded_image_new_shape = np.zeros((Hi * Wi, Hk * Wk))
+    row = 0
+    for i in range(0 + height_padding_length, Hi + height_padding_length):
+        for j in range(0 + width_padding_length, Wi + width_padding_length):
+            # We extract a subset matrix of the padded image with the following indices
+            # [start_row_index : end_row_index , start_column_index : end_column_index]
+            padded_image_temp = padded_image[i - height_padding_length: i + height_padding_length + 1, 
+                             j - width_padding_length: j + width_padding_length + 1]
+            # We append each flattened 1D array of the window of pixels we are at to the next row below
+            padded_image_new_shape[row] = padded_image_temp.flatten()
+            row += 1
+    
+    # Reshape kernel to be of shape (Hk * Wk, 1)
+    kernel_new_shape = kernel.reshape(Hk * Wk, 1)
+    
+    # Perform Matrix Multiplication between reshaped kernel and padded_image_new_shape matrices
+    multiplied_image = np.dot(padded_image_new_shape, kernel_new_shape)
 
+    # Reshape back to get final output image
+    filtered_image = multiplied_image.reshape(Hi, Wi)
     ###
 
     return filtered_image
