@@ -238,7 +238,21 @@ def cs4243_gaussian_kernel(ksize, sigma):
     """
     kernel = np.zeros((ksize, ksize))
     ###Your code here####
+    cached_values = {}
 
+    def exp_cached(x, y, x_mean, y_mean):
+        k = (x - x_mean) ** 2 + (y - y_mean) ** 2
+        if k in cached_values:
+            return cached_values[k]
+        value = math.exp(((x - x_mean) ** 2 + (y - y_mean) ** 2) / denominator)
+        cached_values[k] = value
+        return value
+
+    x_mean = y_mean = int(ksize / 2)
+    denominator = -2 * sigma ** 2
+    for x in range(ksize):
+        for y in range(ksize):
+            kernel[y][x] = exp_cached(x, y, x_mean, y_mean)
     ###
 
     return kernel / kernel.sum()
