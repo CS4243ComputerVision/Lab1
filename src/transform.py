@@ -3,6 +3,7 @@ from skimage import io
 import os.path as osp
 import math
 
+
 def load_image(file_name):
     """
     Load image from disk
@@ -13,10 +14,11 @@ def load_image(file_name):
         print('{} not exist'.format(file_name))
         return
     image = np.asarray(io.imread(file_name))
-    if len(image.shape)==3 and image.shape[2]>3:
+    if len(image.shape) == 3 and image.shape[2] > 3:
         image = image[:, :, :3]
     # print(image.shape) #should be (x, x, 3)
     return image
+
 
 def save_image(image, file_name):
     """
@@ -25,7 +27,7 @@ def save_image(image, file_name):
     :param file_name:
     :return:
     """
-    io.imsave(file_name,image)
+    io.imsave(file_name, image)
 
 
 def cs4243_resize(image, new_width, new_height):
@@ -40,24 +42,25 @@ def cs4243_resize(image, new_width, new_height):
     :return: new_image: numpy.ndarray
     """
 
-    new_image = np.zeros((new_height, new_width, 3), dtype = 'uint8')
+    new_image = np.zeros((new_height, new_width, 3), dtype='uint8')
     if len(image.shape) == 2:
-        new_image = np.zeros((new_height, new_width), dtype = 'uint8')
-        
+        new_image = np.zeros((new_height, new_width), dtype='uint8')
+
     ###Your code here####
     old_height = image.shape[0]
     old_width = image.shape[1]
 
     width_ratio = old_width / new_width
     height_ratio = old_height / new_height
-    
-    for x in range(0, new_height):  
+
+    for x in range(0, new_height):
         for y in range(0, new_width):
             src_x = math.floor(x * height_ratio)
             src_y = math.floor(y * width_ratio)
             new_image[x][y] = image[src_x][src_y]
     ###
     return new_image
+
 
 def cs4243_rgb2grey(image):
     """
@@ -69,20 +72,21 @@ def cs4243_rgb2grey(image):
     :return: grey_image: numpy.ndarray
     """
     rgb = [0.299, 0.587, 0.114]
-    
+
     if len(image.shape) != 3:
         print('Image should have 3 channels')
         return
-    
+
     ###Your code here####
     height = image.shape[0]
     width = image.shape[1]
-    
+
     new_image = np.zeros((height, width))
-    new_image = np.dot(image, rgb) 
+    new_image = np.dot(image, rgb)
     ###
-    
-    return new_image/255
+
+    return new_image / 255
+
 
 def cs4243_histnorm(image, grey_level=256):
     """
@@ -98,10 +102,11 @@ def cs4243_histnorm(image, grey_level=256):
     ##your code here ###
     low = image.min()
     high = image.max()
-    res_image = ((res_image - low) / (high - low) * (grey_level-1))
+    res_image = ((res_image - low) / (high - low) * (grey_level - 1))
     ####
-    
+
     return res_image
+
 
 def cs4243_histequ(image, grey_level=256):
     """
@@ -120,9 +125,9 @@ def cs4243_histequ(image, grey_level=256):
     cum_hist = np.zeros(len(ori_hist), dtype='float64')
     cumulated_value = 0
     image_size = image.shape[0] * image.shape[1]
-    for i in range(len(cum_hist)):  
-        cumulated_value = cumulated_value + ori_hist[i]      
-        cum_hist[i] = cumulated_value / image_size 
+    for i in range(len(cum_hist)):
+        cumulated_value = cumulated_value + ori_hist[i]
+        cum_hist[i] = cumulated_value / image_size
     uniform_hist = np.zeros(len(ori_hist), dtype='float64')
     for j in range(len(uniform_hist)):
         uniform_hist[j] = math.floor(cum_hist[j] * (grey_level - 1))
@@ -133,10 +138,11 @@ def cs4243_histequ(image, grey_level=256):
     res_image = np.zeros(image.shape, dtype='uint8')  # Note the type of elements
     for i in range(height):
         for j in range(width):
-            res_image[i,j] = uniform_hist[image[i,j]]
-    
+            res_image[i, j] = uniform_hist[image[i, j]]
+
     uni_hist = np.bincount(res_image.flatten(), minlength=grey_level)
     return ori_hist, cum_hist, res_image, uni_hist
+
 
 def cs4243_histmatch(ori_image, refer_image):
     """
@@ -158,31 +164,31 @@ def cs4243_histmatch(ori_image, refer_image):
     # (1) Form histogram of original image
     ori_hist = np.bincount(ori_image.flatten(), minlength=256)
     cum_hist = np.zeros(len(ori_hist), dtype='float64')
-    cumulated_value=0
-    image_size=ori_image.shape[0]*ori_image.shape[1]
-    
+    cumulated_value = 0
+    image_size = ori_image.shape[0] * ori_image.shape[1]
+
     for i in range(len(cum_hist)):
-        cumulated_value=cumulated_value+ori_hist[i]
-        cum_hist[i]=cumulated_value/image_size
+        cumulated_value = cumulated_value + ori_hist[i]
+        cum_hist[i] = cumulated_value / image_size
     # (cum_hist)
     # Index -> intensity
     # Value -> Cumulative freq
-    
+
     # (2) Form histogram of template image
     refer_hist = np.bincount(refer_image.flatten(), minlength=256)
     refer_cum_hist = np.zeros(len(refer_hist), dtype='float64')
-    ref_cumulated_value=0
-    refer_image_size=refer_image.shape[0]*refer_image.shape[1]
-    
+    ref_cumulated_value = 0
+    refer_image_size = refer_image.shape[0] * refer_image.shape[1]
+
     for i in range(len(refer_cum_hist)):
-        ref_cumulated_value=ref_cumulated_value+refer_hist[i]
-        refer_cum_hist[i]=ref_cumulated_value/refer_image_size
+        ref_cumulated_value = ref_cumulated_value + refer_hist[i]
+        refer_cum_hist[i] = ref_cumulated_value / refer_image_size
     # (refer_cum_hist)
     # Index -> intensity
     # Value -> Cumulative freq
-    
+
     # (3) 
-    match_hist=np.zeros(len(cum_hist), dtype='float64')
+    match_hist = np.zeros(len(cum_hist), dtype='float64')
     for intensity, frequency in enumerate(cum_hist):
         # note that index of refer_cum_hist=intensity val
         # we want to find the intensity/index that has the closest matching cum freq with 
@@ -190,27 +196,28 @@ def cs4243_histmatch(ori_image, refer_image):
         # https://numpy.org/doc/stable/reference/generated/numpy.argmin.html
         # In case of multiple occurrences of the minimum values, the indices corresponding to the first occurrence are returned.
         new_intensity = (np.abs(refer_cum_hist - frequency)).argmin()
-        match_hist[intensity]=new_intensity
+        match_hist[intensity] = new_intensity
     # (match_hist)
     # index -> Old intensity
     # value -> New intensity
-    
+
     ####
-    
+
     # Set the intensity of the pixel in the raw image to its corresponding new intensity      
     height, width = ori_image.shape
     res_image = np.zeros(ori_image.shape, dtype='uint8')  # Note the type of elements
-    
+
     for i in range(height):
         for j in range(width):
             # ori_image[i,j] contains the Old intensity value
-            res_image[i,j] = match_hist[ori_image[i,j]]
-    
+            res_image[i, j] = match_hist[ori_image[i, j]]
+
     res_hist = np.bincount(res_image.flatten(), minlength=256)
     ori_hist = np.bincount(ori_image.flatten(), minlength=256)
     ref_hist = np.bincount(refer_image.flatten(), minlength=256)
-    
+
     return ori_hist, ref_hist, res_image, res_hist
+
 
 def cs4243_rotate180(kernel):
     """
@@ -219,8 +226,9 @@ def cs4243_rotate180(kernel):
     :param kernel:
     :return:
     """
-    kernel = np.flip(np.flip(kernel, 0),1)
+    kernel = np.flip(np.flip(kernel, 0), 1)
     return kernel
+
 
 def cs4243_gaussian_kernel(ksize, sigma):
     """
@@ -257,6 +265,7 @@ def cs4243_gaussian_kernel(ksize, sigma):
 
     return kernel / kernel.sum()
 
+
 def cs4243_filter(image, kernel):
     """
     10 points
@@ -268,28 +277,29 @@ def cs4243_filter(image, kernel):
     Hi, Wi = image.shape
     Hk, Wk = kernel.shape
     filtered_image = np.zeros((Hi, Wi))
-    
+
     ###Your code here####
-    
+
     # Pad the image with 0s 
     height_padding_length = int(Hk / 2)
     width_padding_length = int(Wk / 2)
     padded_image = pad_zeros(image, height_padding_length, width_padding_length)
-    
+
     # Traverse through every pixel in the padded_image
-    for i in range(0 + height_padding_length, Hi + height_padding_length):  
+    for i in range(0 + height_padding_length, Hi + height_padding_length):
         for j in range(0 + width_padding_length, Wi + width_padding_length):
-            temp = 0 
+            temp = 0
             for u in range(-height_padding_length, height_padding_length + 1):
                 for v in range(-width_padding_length, width_padding_length + 1):
                     # Convolution formula is Pi-u, j-v
                     temp += padded_image[i - u][j - v] * kernel[u + height_padding_length][v + width_padding_length]
             # Remember that the dimensions of filtered_image is smaller than padded_image hence need to 
             # adjust index to account for padded 0s positions in padded_image
-            filtered_image[i - height_padding_length][j- width_padding_length] = temp
+            filtered_image[i - height_padding_length][j - width_padding_length] = temp
     ###
 
     return filtered_image
+
 
 def pad_zeros(image, pad_height, pad_width):
     """
@@ -303,10 +313,11 @@ def pad_zeros(image, pad_height, pad_width):
     :return padded_image: numpy.ndarray
     """
     height, width = image.shape
-    new_height, new_width = height+pad_height*2, width+pad_width*2
+    new_height, new_width = height + pad_height * 2, width + pad_width * 2
     padded_image = np.zeros((new_height, new_width))
-    padded_image[pad_height:new_height-pad_height, pad_width:new_width-pad_width] = image
+    padded_image[pad_height:new_height - pad_height, pad_width:new_width - pad_width] = image
     return padded_image
+
 
 def cs4243_filter_fast(image, kernel):
     """
@@ -329,6 +340,7 @@ def cs4243_filter_fast(image, kernel):
 
     return filtered_image
 
+
 def cs4243_filter_faster(image, kernel):
     """
     10 points
@@ -347,10 +359,11 @@ def cs4243_filter_faster(image, kernel):
     filtered_image = np.zeros((Hi, Wi))
 
     ###Your code here####
-    
+
     ###
 
     return filtered_image
+
 
 def cs4243_downsample(image, ratio):
     """
@@ -366,6 +379,7 @@ def cs4243_downsample(image, ratio):
     width, height = image.shape[1], image.shape[0]
     return image[0:height:ratio, 0:width:ratio]
 
+
 def cs4243_upsample(image, ratio):
     """
     upsample the image to its 2^ratio, 
@@ -375,7 +389,7 @@ def cs4243_upsample(image, ratio):
     :return res_image: upsampled image
     """
     width, height = image.shape[1], image.shape[0]
-    new_width, new_height = width*ratio, height*ratio
+    new_width, new_height = width * ratio, height * ratio
     res_image = np.zeros((new_height, new_width))
     res_image[0:new_height:ratio, 0:new_width:ratio] = image
     return res_image
@@ -395,9 +409,10 @@ def cs4243_gauss_pyramid(image, n=3):
     kernel = cs4243_gaussian_kernel(7, 1)
     pyramid = []
     ## your code here####
-    
+
     ##
     return pyramid
+
 
 def cs4243_lap_pyramid(gauss_pyramid):
     """
@@ -407,17 +422,18 @@ def cs4243_lap_pyramid(gauss_pyramid):
     :return lap_pyramid: list, with list[0] corresponding to image at level n-1 in Gaussian Pyramid.
 	Tips: The kernel for blurring during upsampling is given, you need to scale its value following the standard pipeline in laplacian pyramid.
     """
-    #use same Gaussian kernel 
+    # use same Gaussian kernel
 
     kernel = cs4243_gaussian_kernel(7, 1)
     n = len(gauss_pyramid)
-    lap_pyramid = [gauss_pyramid[n-1]] # the top layer is same as Gaussian Pyramid
+    lap_pyramid = [gauss_pyramid[n - 1]]  # the top layer is same as Gaussian Pyramid
     ## your code here####
-    
+
     ##
-    
+
     return lap_pyramid
-    
+
+
 def cs4243_Lap_blend(A, B, mask):
     """
     10 points
@@ -431,7 +447,7 @@ def cs4243_Lap_blend(A, B, mask):
     kernel = cs4243_gaussian_kernel(7, 1)
     blended_image = None
     ## your code here####
-    
+
     ##
-    
+
     return blended_image
