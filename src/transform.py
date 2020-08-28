@@ -351,7 +351,7 @@ def cs4243_filter_fast(image, kernel):
             padded_image_temp = padded_image[i - height_padding_length: i + height_padding_length + 1, 
                              j - width_padding_length: j + width_padding_length + 1]
             # Perform element-wise multiplication, sum up the resultant elements and assign it to filtered_image
-            filtered_image[i - height_padding_length][j - width_padding_length] = np.sum(np.multiply(padded_image_temp, kernel).flatten())
+            filtered_image[i - height_padding_length][j - width_padding_length] = np.sum(np.multiply(padded_image_temp, rotated_kernel).flatten())
     ###
 
     return filtered_image
@@ -399,7 +399,7 @@ def cs4243_filter_faster(image, kernel):
             row += 1
     
     # Reshape kernel to be of shape (Hk * Wk, 1)
-    kernel_new_shape = kernel.reshape(Hk * Wk, 1)
+    kernel_new_shape = rotated_kernel.reshape(Hk * Wk, 1)
     
     # Perform Matrix Multiplication between reshaped kernel and padded_image_new_shape matrices
     multiplied_image = np.dot(padded_image_new_shape, kernel_new_shape)
