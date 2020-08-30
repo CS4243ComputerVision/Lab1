@@ -455,7 +455,11 @@ def cs4243_gauss_pyramid(image, n=3):
     kernel = cs4243_gaussian_kernel(7, 1)
     pyramid = []
     ## your code here####
-
+    pyramid.append(image)
+    for i in range(1, n+1):
+        blurred_image = cs4243_filter_faster(image, kernel)
+        image = cs4243_downsample(blurred_image, 2)
+        pyramid.append(image)
     ##
     return pyramid
 
@@ -473,10 +477,14 @@ def cs4243_lap_pyramid(gauss_pyramid):
     kernel = cs4243_gaussian_kernel(7, 1)
     n = len(gauss_pyramid)
     lap_pyramid = [gauss_pyramid[n - 1]]  # the top layer is same as Gaussian Pyramid
+
     ## your code here####
-
+    for i in reversed(range(1, n)):
+        upsampled_image = cs4243_upsample(gauss_pyramid[i], 2)
+        filtered = cs4243_filter_faster(upsampled_image, kernel) * (4 / np.sum(kernel.flatten()))
+        residue = gauss_pyramid[i - 1] - filtered
+        lap_pyramid.append(residue)
     ##
-
     return lap_pyramid
 
 
@@ -494,6 +502,32 @@ def cs4243_Lap_blend(A, B, mask):
     blended_image = None
     ## your code here####
 
-    ##
+    # Find the Gaussian Pyramids for A and B
+    gauss_A = cs4243_gauss_pyramid(A)
+    gauss_B = cs4243_gauss_pyramid(B)
 
+    # From Gaussian Pyramids, find their Laplacian Pyramids
+    lap_A = cs4243_lap_pyramid(gauss_A)
+    lap_B = cs4243_lap_pyramid(gauss_B)
+
+    # Now join the left half of apple and right half of orange in each levels of Laplacian Pyramids
+    masks = [mask]
+    for n in range(len(lap_A) - 1):
+        new_mask = cs4243_downsample(masks[n], 2)
+        masks.append(new_mask)
+
+    joined = []  # joined = A*mask + B*(1.0-mask)
+    for i in range(len(lap_A)):
+        join = lap_A[i]*masks[len(lap_A) - 1 - i] + lap_B[i]*(1.0 - masks[len(lap_A) - 1 - i])
+        joined.append(join)
+
+    # Finally from this joint image pyramids, reconstruct the original image.
+    image = joined[0]
+    for k in range(1, len(joined)):
+        upsampled = cs4243_upsample(image, 2)
+        filtered = cs4243_filter_faster(upsampled, kernel) * 4
+        image = filtered + joined[k]
+
+    ##
+    blended_image = image
     return blended_image
