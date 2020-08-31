@@ -281,8 +281,8 @@ def cs4243_filter(image, kernel):
     ###Your code here####
 
     # Pad the image with 0s 
-    height_padding_length = int(Hk / 2)
-    width_padding_length = int(Wk / 2)
+    height_padding_length = math.floor(Hk / 2)
+    width_padding_length = math.floor(Wk / 2)
     padded_image = pad_zeros(image, height_padding_length, width_padding_length)
 
     # Traverse through every pixel in the padded_image
@@ -336,8 +336,8 @@ def cs4243_filter_fast(image, kernel):
 
     ###Your code here####
     # Pad the image with 0s 
-    height_padding_length = int(Hk / 2)
-    width_padding_length = int(Wk / 2)
+    height_padding_length = math.floor(Hk / 2)
+    width_padding_length = math.floor(Wk / 2)
     padded_image = pad_zeros(image, height_padding_length, width_padding_length)
     
     # Rotate kernel by 180
@@ -376,8 +376,8 @@ def cs4243_filter_faster(image, kernel):
 
     ###Your code here####
     # Pad the image with 0s 
-    height_padding_length = int(Hk / 2)
-    width_padding_length = int(Wk / 2)
+    height_padding_length = math.floor(Hk / 2)
+    width_padding_length = math.floor(Wk / 2)
     padded_image = pad_zeros(image, height_padding_length, width_padding_length)
     
     # Rotate kernel by 180
@@ -476,17 +476,17 @@ def cs4243_lap_pyramid(gauss_pyramid):
 
     kernel = cs4243_gaussian_kernel(7, 1)
     n = len(gauss_pyramid)
-    lap_pyramid = [gauss_pyramid[n - 1]]  # the top layer is same as Gaussian Pyramid
+    # the top layer of Lap Pyramid is the same as Gaussian Pyramid last layer
+    lap_pyramid = [gauss_pyramid[n - 1]]  
 
     ## your code here####
     for i in reversed(range(1, n)):
         upsampled_image = cs4243_upsample(gauss_pyramid[i], 2)
-        filtered = cs4243_filter_faster(upsampled_image, kernel) * (4 / np.sum(kernel.flatten()))
+        filtered = cs4243_filter_faster(upsampled_image, kernel) * 4
         residue = gauss_pyramid[i - 1] - filtered
         lap_pyramid.append(residue)
     ##
     return lap_pyramid
-
 
 def cs4243_Lap_blend(A, B, mask):
     """
@@ -510,24 +510,22 @@ def cs4243_Lap_blend(A, B, mask):
     lap_A = cs4243_lap_pyramid(gauss_A)
     lap_B = cs4243_lap_pyramid(gauss_B)
 
-    # Now join the left half of apple and right half of orange in each levels of Laplacian Pyramids
-    masks = [mask]
-    for n in range(len(lap_A) - 1):
-        new_mask = cs4243_downsample(masks[n], 2)
-        masks.append(new_mask)
+    # Build a Gaussian pyramid on the mask
+    gauss_masks = cs4243_gauss_pyramid(mask)
 
-    joined = []  # joined = A*mask + B*(1.0-mask)
+    # Now join the left half of image A and right half of image B in each level of Laplacian Pyramids
+    # joined = A * mask + B * (1.0-mask)
+    joined = []  
     for i in range(len(lap_A)):
-        join = lap_A[i]*masks[len(lap_A) - 1 - i] + lap_B[i]*(1.0 - masks[len(lap_A) - 1 - i])
+        join = lap_A[i] * gauss_masks[len(lap_A) - 1 - i] + lap_B[i] * (1.0 - gauss_masks[len(lap_A) - 1 - i])
         joined.append(join)
 
     # Finally from this joint image pyramids, reconstruct the original image.
-    image = joined[0]
+    blended_image = joined[0]
     for k in range(1, len(joined)):
-        upsampled = cs4243_upsample(image, 2)
+        upsampled = cs4243_upsample(blended_image, 2)
         filtered = cs4243_filter_faster(upsampled, kernel) * 4
-        image = filtered + joined[k]
+        blended_image = filtered + joined[k]
 
     ##
-    blended_image = image
     return blended_image
